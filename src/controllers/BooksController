@@ -1,0 +1,95 @@
+'use strict';
+
+var BookService = require('../services/BookService');
+
+module.exports = class BooksController {
+
+    async index(request, response, next) {
+        try {
+            const bookService = new BookService()
+            const result = await bookService.getIndex()
+            return response.status(200).json(result)
+        } catch (err) {
+            return response.status(400).json({ error: err })
+        }
+    }
+
+    async cover(request, response, next) {
+        try {
+            const { isbn } = request.body
+            if (!isbn) {
+                return response.status(400).json({ error: "The parameter ISBN is mandatory" })
+            }
+            const bookService = new BookService()
+            const book = await bookService.getBookFromISBN(isbn)
+            const img = Buffer.from(book.cover.image, 'base64');
+
+            response.writeHead(200, {
+                'Content-Type': 'image/png',
+                'Content-Length': img.length
+            });
+            response.end(img);
+
+        } catch (err) {
+            return response.status(400).json({ error: err })
+        }
+
+    }
+
+    async povcharacters(request, response, next) {
+
+        try {
+            const bookService = new BookService()
+            const result = await bookService.getPovcharacters()
+            return response.status(200).json(result)
+        } catch (err) {
+            return response.status(400).json({ error: err })
+        }
+
+    }
+
+    async characterdetails(request, response, next) {
+
+        try {
+            const { name } = request.body
+            if (!name) {
+                return response.status(400).json({ error: "The parameter Name is mandatory" })
+            }
+
+            const bookService = new BookService()
+            const result = await bookService.getCharacterdetails(name)
+
+            if (!result)
+                return response.status(200).json(`Characters with name ${name} not found`)
+            else
+                return response.status(200).json(result)
+
+        } catch (err) {
+            return response.status(400).json({ error: err })
+        }
+
+    }
+
+    async booksFromCharacter(request, response, next) {
+
+        try {
+            const { name } = request.body
+            if (!name) {
+                return response.status(400).json({ error: "The parameter Name is mandatory" })
+            }
+            const bookService = new BookService()
+            const result = await bookService.getBooksFromCharacter(name)
+
+            if (result.length < 1)
+                return response.status(200).json(`There is no book with a Character Name ${name}`)
+            else
+                return response.status(200).json(result)
+
+        } catch (err) {
+            return response.status(400).json({ error: err })
+        }
+
+    }
+
+}
+
